@@ -17,7 +17,9 @@ from os import path
 TWITTER_IMAGE_MAX_SIZE = 1000 * 1000
 IMAGE_RESIZE_STEP = 2 ** 6
 
+
 logger = logging.getLogger(__name__)
+
 
 def _get_page_image_info(instance):
     image = None
@@ -26,6 +28,7 @@ def _get_page_image_info(instance):
     settings = instance.settings
     image = settings['DEFAULT_HEADER_IMAGE'] if not image else image
     return _get_image_info(settings, settings['PATH'], image)
+
 
 def _get_image_info(settings, base_dir, image_path):
     url = path.join(settings['SITEURL'], image_path)
@@ -38,12 +41,14 @@ def _get_image_info(settings, base_dir, image_path):
         'path': image_path
     }
 
+
 def _save_image(settings, image_path, image):
     directory = path.dirname(image_path)
     if not path.exists(directory):
         os.makedirs(directory)
 
     image.save(image_path, quality=95, optimize=True)
+
 
 def _twitterize_image(settings, image_info):
     src_path = path.join(settings['PATH'], image_info['path'])
@@ -61,10 +66,12 @@ def _twitterize_image(settings, image_info):
 
     return _get_image_info(settings, out_dir, image_path)
 
+
 def _saved_image_size(image):
     img_file = BytesIO()
     image.save(img_file, image.format, quality=95, optimize=True)
     return img_file.tell()
+
 
 def _reduce_image_size(image, side_size):
     logger.debug('reducing image size: %s', side_size)
@@ -78,25 +85,31 @@ def _get_page_type(instance):
         return 'article'
     return 'website'
 
+
 def _get_page_url(instance):
     site_url = instance.settings['SITEURL']
     return path.join(site_url, instance.url)
 
+
 def _get_page_description(instance):
     return instance.metadata.get('summary', instance.summary)
+
 
 def _get_create_date(instance):
     return instance.date.isoformat()
 
+
 def _get_modified_date(instance):
     if hasattr(instance, 'modified'):
         return instance.modified.isoformat()
+
 
 def _get_tags(instance):
     try:
         return [tag.name for tag in instance.tags]
     except AttributeError:
         return []
+
 
 def _tag_author(author):
     settings = author.settings
@@ -117,6 +130,7 @@ def _tag_author(author):
 
     tags = _make_tags(info, settings)
     _set_attrs(author, tags)
+
 
 def _tag_article(article):
     page_info = {
@@ -140,6 +154,7 @@ def _tag_article(article):
     tags = _make_tags(page_info, article.settings)
     _set_attrs(article, tags)
 
+
 def _tag_generator(generator):
     settings = generator.settings
     image = settings['DEFAULT_HEADER_IMAGE']
@@ -155,6 +170,7 @@ def _tag_generator(generator):
     tags = _make_tags(page_info, generator.settings)
     generator.context.update(tags)
 
+
 def _tag_page(page):
     page_info = {
         'title':       page.title,
@@ -167,9 +183,12 @@ def _tag_page(page):
     tags = _make_tags(page_info, page.settings)
     _set_attrs(page, tags)
 
+
 def _set_attrs(obj, attrs):
-    for k, v in attrs.iteritems(): setattr(obj, k, v)
+    for k, v in attrs.iteritems():
+        setattr(obj, k, v)
     return obj
+
 
 def _make_tags(info, settings):
     providers = {
@@ -183,11 +202,13 @@ def _make_tags(info, settings):
 
     return tags
 
+
 def _make_common_tags(info, settings):
     metas = {
         'description': info['description']
     }
     return metas.items()
+
 
 def _make_twitter_tags(info, settings):
     image_info = _twitterize_image(settings, info['image'])
@@ -218,6 +239,7 @@ def _make_twitter_tags(info, settings):
 
     return metas.items()
 
+
 def _make_og_tags(info, settings):
     ptype = info['type']
     image = info['image']
@@ -244,6 +266,7 @@ def _make_og_tags(info, settings):
 
         for author in info['authors']:
             metas['article:author'] = author.og
+            metas['article:publisher'] = settings['SITENAME']
 
         og_tags = [('article:tag', tag) for tag in info['tags']]
         return metas.items() + og_tags
@@ -270,6 +293,7 @@ def run_plugin(generators):
         elif isinstance(generator, PagesGenerator):
             for page in generator.pages:
                 _tag_page(page)
+
 
 def register():
     signals.all_generators_finalized.connect(run_plugin)
