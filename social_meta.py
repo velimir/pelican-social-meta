@@ -168,9 +168,11 @@ def _tag_author(author):
         'first_name':  author.first_name,
         'last_name':   author.last_name,
         'gender':      author.gender,
-        'username':    author.username,
-        'twitter':     author.twitter
+        'username':    author.username
     }
+
+    if getattr(author, 'twitter', None):
+        info['twitter'] = author.twitter
 
     tags = _make_tags(info, settings)
     _set_attrs(author, tags)
@@ -274,16 +276,20 @@ def _make_twitter_tags(info, settings):
     ptype = info['type']
     if 'article' == ptype:
         author = info['authors'][0]
-        twitter_id = author.twitter
-        metas['twitter:site'] = twitter_id
+        if getattr(author, 'twitter', None):
+            twitter_id = author.twitter
+            metas['twitter:site'] = twitter_id
 
     elif 'profile' == ptype:
-        metas['twitter:site'] = info['twitter']
+        if 'twitter' in info:
+            metas['twitter:site'] = info['twitter']
 
     else:
         author_name = settings['AUTHOR']
-        username = settings['AUTHORS'][author_name]['twitter']
-        metas['twitter:site'] = username
+        author = settings['AUTHORS'][author_name]
+        if 'twitter' in author:
+            username = author['twitter']
+            metas['twitter:site'] = username
 
     return metas.items()
 
